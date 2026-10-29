@@ -189,6 +189,20 @@ validate_options :: proc(capacity: int, options: Options) -> Error {
 	return nil
 }
 
+/*
+index_reserve returns how many slots to reserve so that a map holds `capacity`
+keys without growing. An Odin map grows once it is 75% full, so reserving only
+`capacity` slots would make a later put allocate.
+*/
+@(private)
+index_reserve :: proc "contextless" (capacity: int) -> int {
+	extra := capacity / 3 + 1
+	if capacity > max(int) - extra {
+		return max(int)
+	}
+	return capacity + extra
+}
+
 @(private)
 clock_now :: proc(clock: Clock, epoch: time.Tick) -> i64 {
 	if clock.procedure != nil {

@@ -70,7 +70,7 @@ lfu_init :: proc(c: ^LFU($K, $V), capacity: int, options := Options{}, allocator
 		delete(nodes, allocator)
 		return bucket_err
 	}
-	index, map_err := make(map[K]i32, capacity, allocator)
+	index, map_err := make(map[K]i32, index_reserve(capacity), allocator)
 	if map_err != nil {
 		delete(nodes, allocator)
 		delete(buckets, allocator)
@@ -367,7 +367,7 @@ lfu_resize :: proc(c: ^LFU($K, $V), capacity: int) -> Error {
 		delete(nodes, c.allocator)
 		return bucket_err
 	}
-	if err := reserve(&c.index, capacity); err != nil {
+	if err := reserve(&c.index, index_reserve(capacity)); err != nil {
 		delete(nodes, c.allocator)
 		delete(buckets, c.allocator)
 		return err

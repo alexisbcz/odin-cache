@@ -50,7 +50,7 @@ lru_init :: proc(c: ^LRU($K, $V), capacity: int, options := Options{}, allocator
 	validate_options(capacity, options) or_return
 
 	nodes := pool_make(K, V, capacity, allocator) or_return
-	index, map_err := make(map[K]i32, capacity, allocator)
+	index, map_err := make(map[K]i32, index_reserve(capacity), allocator)
 	if map_err != nil {
 		delete(nodes, allocator)
 		return map_err
@@ -312,7 +312,7 @@ lru_resize :: proc(c: ^LRU($K, $V), capacity: int) -> Error {
 		return nil
 	}
 	nodes := pool_make(K, V, capacity, c.allocator) or_return
-	if err := reserve(&c.index, capacity); err != nil {
+	if err := reserve(&c.index, index_reserve(capacity)); err != nil {
 		delete(nodes, c.allocator)
 		return err
 	}
