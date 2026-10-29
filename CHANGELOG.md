@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-29
+
+### Fixed
+
+- Puts no longer allocate after init or resize. The index reserved space for only `capacity` keys, but an Odin map grows once it is 75% full, so filling a cache of 7 or more entries caused one hidden allocation.
+- A put over an expired entry now evicts the old pair with reason `.Expired` and inserts the new pair as a new entry. Before, it reported `.Replaced`, counted an update, and in `LFU` kept the old frequency, so a stale entry came back as hot.
+- A shrinking resize now reports entries that had already expired with reason `.Expired` and counts them in `Stats.expirations`, not as capacity evictions.
+
 ## [0.1.0] - 2026-10-29
 
 ### Added
@@ -19,5 +27,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - `resize` procedures, iterators, `peek`, `contains`, `get_ptr` and `lfu_frequency`.
 - `Error`, a union of `Usage_Error` and `runtime.Allocator_Error`.
 
-[Unreleased]: https://github.com/alexisbcz/odin-cache/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/alexisbcz/odin-cache/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/alexisbcz/odin-cache/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/alexisbcz/odin-cache/releases/tag/v0.1.0
