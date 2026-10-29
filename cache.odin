@@ -83,7 +83,7 @@ Evict_Reason :: enum u8 {
 	Expired,
 	// A remove call deleted the entry.
 	Removed,
-	// A put stored a new key and value under an existing key. The callback
+	// A put stored a new key and value under an existing live key. The callback
 	// receives the previous key and value.
 	Replaced,
 	// A clear or destroy call emptied the cache.
@@ -101,7 +101,7 @@ Stats :: struct {
 	misses:      u64,
 	// Puts that added a new key.
 	inserts:     u64,
-	// Puts that replaced the value of an existing key.
+	// Puts that replaced the value of an existing live key.
 	updates:     u64,
 	// Entries evicted to make room, including those dropped by a resize.
 	evictions:   u64,

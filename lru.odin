@@ -104,8 +104,10 @@ lru_put_ttl stores `value` under `key` and marks it most recently used.
 
 When `key` is already present, the cache keeps the new key and value and hands
 the previous pair to the eviction callback with reason `.Replaced`. When the
-cache is full, it first evicts the least recently used entry, with reason
-`.Expired` if that entry had already expired and `.Capacity` otherwise.
+entry under `key` has already expired, the cache instead evicts it with reason
+`.Expired` and inserts the new pair as a new entry. When the cache is full, it
+first evicts the least recently used entry, with reason `.Expired` if that
+entry had already expired and `.Capacity` otherwise.
 
 Inputs:
 - key, value: stored by value. The cache does not clone them.
@@ -127,7 +129,10 @@ lru_put_ttl :: proc(c: ^LRU($K, $V), key: K, value: V, ttl: time.Duration) -> Er
 		deadline = deadline_after(clock_now(c.options.clock, c.epoch), ttl)
 	}
 
-	if i, found := c.index[key]; found {
+	if i, found := c.index[key]; found && c.nodes[i].deadline != NEVER && is_expired(c.nodes[i].deadline, clock_now(c.options.clock, c.epoch)) {
+		// The old pair already expired, so drop it as expired and insert fresh.
+		lru_drop(c, i, .Expired)
+	} else if found {
 		n := &c.nodes[i]
 		old_key, old_value := n.key, n.value
 		n.key = key
