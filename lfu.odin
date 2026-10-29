@@ -347,7 +347,8 @@ lfu_purge_expired :: proc(c: ^LFU($K, $V)) -> (purged: int) {
 
 /*
 lfu_resize changes the capacity to `capacity`. When shrinking, it evicts
-entries in eviction order with reason `.Capacity` until the rest fit.
+entries in eviction order until the rest fit, with reason `.Expired` for
+entries that had already expired and `.Capacity` otherwise.
 Frequencies and tie-break order are preserved.
 
 It allocates the new pools with the cache's allocator before touching any
@@ -378,8 +379,13 @@ lfu_resize :: proc(c: ^LFU($K, $V), capacity: int) -> Error {
 		return err
 	}
 
-	for c.count > capacity {
-		lfu_drop(c, c.buckets[c.low].tail, .Capacity)
+	if c.count > capacity {
+		now := clock_now(c.options.clock, c.epoch)
+		for c.count > capacity {
+			victim := c.buckets[c.low].tail
+			reason := Evict_Reason.Expired if is_expired(c.nodes[victim].deadline, now) else .Capacity
+			lfu_drop(c, victim, reason)
+		}
 	}
 
 	low, high := NIL, NIL

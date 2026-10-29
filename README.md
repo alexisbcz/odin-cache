@@ -72,7 +72,7 @@ A cache stores keys and values by value and never clones them. When they own mem
 | Reason | When |
 | --- | --- |
 | `.Capacity` | The cache was full and the policy chose this entry |
-| `.Expired` | The TTL ran out and a get, a purge or a put found it |
+| `.Expired` | The TTL ran out and a get, a purge, a resize or a put found it |
 | `.Removed` | You called `lru_remove` or `lfu_remove` |
 | `.Replaced` | A put stored a new pair under an existing live key; the callback gets the previous pair |
 | `.Cleared` | You called a clear or destroy procedure |

@@ -297,7 +297,8 @@ lru_purge_expired :: proc(c: ^LRU($K, $V)) -> (purged: int) {
 
 /*
 lru_resize changes the capacity to `capacity`. When shrinking, it evicts the
-least recently used entries with reason `.Capacity` until the rest fit.
+least recently used entries until the rest fit, with reason `.Expired` for
+entries that had already expired and `.Capacity` otherwise.
 Recency order is preserved.
 
 It allocates a new pool with the cache's allocator before touching any entry,
@@ -322,8 +323,12 @@ lru_resize :: proc(c: ^LRU($K, $V), capacity: int) -> Error {
 		return err
 	}
 
-	for c.count > capacity {
-		lru_drop(c, c.tail, .Capacity)
+	if c.count > capacity {
+		now := clock_now(c.options.clock, c.epoch)
+		for c.count > capacity {
+			reason := Evict_Reason.Expired if is_expired(c.nodes[c.tail].deadline, now) else .Capacity
+			lru_drop(c, c.tail, reason)
+		}
 	}
 
 	head, tail := NIL, NIL
